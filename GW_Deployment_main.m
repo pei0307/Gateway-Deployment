@@ -359,7 +359,8 @@ while (1)
     end
 end
 GW_Num = q_num;
-
+filename = [floor_plan(1:length(floor_plan)-4),'_D',num2str(den)];
+save(filename,'Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Served','User_Arc','GW_Serve_Limit');
 %% Applying color map
 originalFloorPlan = ~imdilate(~floorPlanBW,strel('disk',2));
 smallFSPLImage = (reshape(lossdB,meshNode.vert.num, meshNode.horz.num));
