@@ -1,4 +1,4 @@
-function [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result(GW_Pathloss_perPixel,CoverRange_perPixel,Tx_ind,Rxr,Rxc,TxP_Thres,GW_Serve_Limit)
+function [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result(GW_Pathloss_perPixel,CoverRange_perPixel,Tx_ind,Rxr,Rxc,TxP_Thres,GW_Serve_Limit,Density_map)
 
 Cover_Arc = 180;
 
@@ -75,9 +75,9 @@ for i=1:1:length(temp_Tx)
     for j =1:1:length(Served_P)
         User = Covered_P(ind(j));
         %if user has not been served or served power lower than this GW
-        if  attach < GW_Serve_Limit && User_Served(User,1) == temp_Tx(i) 
-            attach =attach + 1;
-        elseif (attach == GW_Serve_Limit && User_Served(User,1) == temp_Tx(i))
+        if  attach + Density_map(User) <= GW_Serve_Limit && User_Served(User,1) == temp_Tx(i) 
+            attach =attach +Density_map(User);
+        elseif (attach +Density_map(User) > GW_Serve_Limit && User_Served(User,1) == temp_Tx(i))
             User_Served(User,1) = 0;
             User_Served(User,2) = 0;
         end
@@ -92,11 +92,10 @@ for i=1:1:length(temp_Tx)
         for j =1:1:length(ind)
             User = Covered_P(ind(j));
             if User_Served(User,1) == 0
-                User_Served(User,1) = temp_Tx(i);
-                User_Served(User,2) = Served_P(j);
-                Tx_Record(temp_Tx(i)) = Tx_Record(temp_Tx(i))+1;
-                if Tx_Record(temp_Tx(i)) == GW_Serve_Limit
-                    break;
+                if Tx_Record(temp_Tx(i))  + Density_map(User) <= GW_Serve_Limit
+                    User_Served(User,1) = temp_Tx(i);
+                    User_Served(User,2) = Served_P(j);
+                    Tx_Record(temp_Tx(i)) = Tx_Record(temp_Tx(i)) + Density_map(User);
                 end
             end
         end

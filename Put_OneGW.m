@@ -1,10 +1,13 @@
-function [lossdB,User_Served,User_Covered,User_Arc] = Put_OneGW(GW_Pathloss_perPixel,CoverRange_perPixel,Tx_ind,Rxc,Rxr,User_Served,User_Arc,User_Covered,lossdB,TxP_Thres,GW_Serve_Limit,Tx_ind_1)
+function [lossdB,User_Served,User_Covered,User_Arc] = Put_OneGW(GW_Pathloss_perPixel,CoverRange_perPixel,Tx_ind,Rxc,Rxr,User_Served,User_Arc,User_Covered,lossdB,TxP_Thres,GW_Serve_Limit,Density_map)
 Cover_Arc = 180;
 Temp_loss =  GW_Pathloss_perPixel(Tx_ind,:);
 
-Sort_P = sort(Temp_loss(:),'descend');
+
+[Sort_P,ind_P] = sort(Temp_loss(:),'descend');
 ServedRange_Thres = max(TxP_Thres,Sort_P(GW_Serve_Limit));
-Served_P = Temp_loss(:) >= ServedRange_Thres;
+% Served_P = Temp_loss(:) >= ServedRange_Thres;
+Served_P = Calculate_Range(Density_map,Sort_P,ind_P,GW_Serve_Limit);
+Served_P = find(Served_P == 1);
 User_Served(Served_P,1) = Tx_ind;
 User_Served(Served_P,2) = Temp_loss(Served_P);
 
