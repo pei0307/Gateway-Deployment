@@ -64,9 +64,9 @@ for d=1:1:length(Tx_ind)
             losTemp = zeros(size(thinFloorPlanBW)); % clears the LOS image
         end
     end
-    GW_Pathloss_perPixel(Tx_ind(d),:) = Temp_loss;
-    GW_Pathloss_perPixel = GW_Pathloss_perPixel+(GW_Pathloss_perPixel');
-    for i=1:1:size(Rxc,1)
-        GW_Pathloss_perPixel(i,i) = 60.8;
-    end
+    GW_Pathloss_perPixel(Tx_ind(d),:) = Temp_loss;    
+end
+GW_Pathloss_perPixel = GW_Pathloss_perPixel+(GW_Pathloss_perPixel');
+for i=1:1:size(Rxc,1)
+    GW_Pathloss_perPixel(i,i) = -60.8;
 end

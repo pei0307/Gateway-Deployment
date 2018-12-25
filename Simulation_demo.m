@@ -1,6 +1,6 @@
 clear;
 
-floor_plan = 'data\thesis.png' ;
+floor_plan = 'data\SKfloorplan_modify.png';
 floorPlan = imread(floor_plan);
 floorPlanBW = ~im2bw(floorPlan);
 % adjusting the image if required
@@ -26,58 +26,58 @@ meanGServednum = [];
 FInishRate = [];
 WorstFinish = [];
 
-    filename1 = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity.mat'];
-    load(filename1);
-    [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result3(GW_Pathloss_perPixel,Tx_ind,Rxr,Rxc,-84.4505,GW_Serve_Limit);
-    GW_Serve_Limit=6;
-    Result = [];
-    Num_Record = zeros(100,1);
-    for r =1:1:100
-        User = zeros(size(Rxc,1),4);
-        User_num = 0;
-        for i=1:1:size(Rxc,1)
-            if rand() < Density_map(i)
-                User_num = User_num+1;
-                User(User_num,1) = i;
-                User(User_num,2) = randi([0,359]);
-            end
-        end
-        Num_Record(r) = User_num;
-        % User = 1:path /2:angle record
-        %Result
-        Tx_Result =[];
-        for t = 1 : 1 : period
-            [User,Tx_Record] = GW_Assignment(User,Rxc,Rxr,User_num,User_Covered,User_Arc,GW_Serve_Limit);
-            Result = [Result;length(find(User(1:User_num,3)==0))/User_num,sum(User(1:User_num,4))/length(find(User(1:User_num,3)~=0)),length(find(User(1:User_num,3)~=0))];
-            Tx_Result = [Tx_Result;Tx_Record(find(Tx_ind>0))];
-            User = Random_walk(User,User_num,meshNode);
+filename1 = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity0.06.mat'];
+load(filename1);
+[lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result3(GW_Pathloss_perPixel,Tx_ind,Rxr,Rxc,-84.4505,GW_Serve_Limit);
+GW_Serve_Limit=6;
+Result = [];
+Num_Record = zeros(100,1);
+for r =1:1:100
+    User = zeros(size(Rxc,1),4);
+    User_num = 0;
+    for i=1:1:size(Rxc,1)
+        if rand() < Density_map(i)
+            User_num = User_num+1;
+            User(User_num,1) = i;
+            User(User_num,2) = randi([0,359]);
         end
     end
-
-    User_mean = mean(Num_Record);
-    
-    Period_Result=zeros(1,1000);
-    for i=1:1:period
-        Period_Result(i) = mean(Result((i-1)*100+1:(i*100),1));
+    Num_Record(r) = User_num;
+    % User = 1:path /2:angle record
+    %Result
+    Tx_Result =[];
+    for t = 1 : 1 : period
+        [User,Tx_Record] = GW_Assignment(User,Rxc,Rxr,User_num,User_Covered,User_Arc,GW_Serve_Limit);
+        Result = [Result;length(find(User(1:User_num,3)==0))/User_num,sum(User(1:User_num,4))/length(find(User(1:User_num,3)~=0)),length(find(User(1:User_num,3)~=0))];
+        Tx_Result = [Tx_Result;Tx_Record(find(Tx_ind>0))];
+        User = Random_walk(User,User_num,meshNode);
     end
-    
-    mean_Rxpower = mean(Result(:,2));
-    mean_GWserved = mean(Result(:,3)/length(find(Tx_ind==1)));
-    mean_Tx = mean(Tx_Result)
-    Finish_rate = 1-mean(Result(:,1));
-    Worst_case = 1-max(Period_Result);
+end
 
-    fprintf('Mean User Num : %f \n',User_mean);
-    fprintf('Tx Num  :\n Proposed:%d \n',length(find(Tx_ind==1)));
-    fprintf('Mean Rx Power :\n Proposed:%f \n',mean_Rxpower);
-    fprintf('Mean GW Served :\n Proposed:%f \n',mean_GWserved);
-    fprintf('Finish rate :\n Proposed:%f \n',Finish_rate);
-    fprintf('Worst_case :\n Proposed:%f \n',Worst_case);
-     sfilename = [floor_plan(1:length(floor_plan)-4),'_SimulationResult_Fealsible'];
-     save(sfilename,'Num_Record','Result','Period_Result','Finish_rate','Worst_case','Tx_Result');
-    meanGServednum = [meanGServednum;mean_GWserved];
-    FInishRate = [FInishRate;Finish_rate];
-    WorstFinish = [WorstFinish;Worst_case];
+User_mean = mean(Num_Record);
+
+Period_Result=zeros(1,period);
+for i=1:1:period
+    Period_Result(i) = mean(Result((i-1)*100+1:(i*100),1));
+end
+
+mean_Rxpower = mean(Result(:,2));
+mean_GWserved = mean(Result(:,3)/length(find(Tx_ind==1)));
+mean_Tx = mean(Tx_Result)
+Finish_rate = 1-mean(Result(:,1));
+Worst_case = 1-max(Period_Result);
+
+fprintf('Mean User Num : %f \n',User_mean);
+fprintf('Tx Num  :\n Proposed:%d \n',length(find(Tx_ind==1)));
+fprintf('Mean Rx Power :\n Proposed:%f \n',mean_Rxpower);
+fprintf('Mean GW Served :\n Proposed:%f \n',mean_GWserved);
+fprintf('Finish rate :\n Proposed:%f \n',Finish_rate);
+fprintf('Worst_case :\n Proposed:%f \n',Worst_case);
+sfilename = [floor_plan(1:length(floor_plan)-4),'_SimulationResult_Fealsible'];
+save(sfilename,'Num_Record','Result','Period_Result','Finish_rate','Worst_case','Tx_Result');
+meanGServednum = [meanGServednum;mean_GWserved];
+FInishRate = [FInishRate;Finish_rate];
+WorstFinish = [WorstFinish;Worst_case];
 
 
 

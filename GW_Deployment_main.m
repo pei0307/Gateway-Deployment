@@ -16,7 +16,7 @@ wallAt(255) = round(sum(wallAt)./sum(wallAt>0));  % This is for intersecting wal
 calibrate_option        = 0;
 Pixel_Res = 1;    %pixel=1m*1m
 pathLossModel           = 2;        % 1=Free-Space, 2=our pathloss
-TriangleDemo                = 0;        % Showes furtther details if 1
+TriangleDemo                = 1;        % Showes furtther details if 1
 
 %% Pathloss Setting Parameter
 TxPower                 = -63.8;        % dBm or dB
@@ -34,7 +34,7 @@ Pw_to_PdBm = @(Pw) 10*log10(Pw);
 
 
 
-floor_plan = 'data\thesis.png';
+floor_plan = 'data\SKfloorplan_modify.png';
 wall_detect = [floor_plan(1:length(floor_plan)-4),'_wall_detect.mat'];
 Pixel_Setting = [floor_plan(1:length(floor_plan)-4),'_pixel_Setting.mat'];
 Pathloss_Distance = [floor_plan(1:length(floor_plan)-4),'_PlandDis_perpixel.mat'];
@@ -45,8 +45,8 @@ Pathloss_Distance = [floor_plan(1:length(floor_plan)-4),'_PlandDis_perpixel.mat'
 floorPlan = imread(floor_plan);
 floorPlanBW = im2bw(floorPlan);
 originalFloorPlan = floorPlanBW;
-% ImDensity = imread('data\test2_density.png');
-% ImDensity2 = ~im2bw(ImDensity);
+ImDensity = imread('data\SKfloorplan_modify_avaliable.png');
+ImDensity2 = ~im2bw(ImDensity);
 
 % wall detection
 if exist(wall_detect, 'file')
@@ -110,18 +110,27 @@ else
     % finding the nodes
     [Rxr,Rxc] = find(floorMesh == 1);
     for i=1:1:size(Rxr,1)
-        if floorPlanGray(Rxr(i),Rxc(i))~=0
-            while(1)
-                t_Rxc = Rxc(i) + round(rand(1)*2-1);
-                t_Rxr = Rxr(i) + round(rand(1)*2-1);
-                if(floorPlanGray(t_Rxr,t_Rxc) == 0)
-                    Rxr(i) = t_Rxr;
-                    Rxc(i) = t_Rxc;
-                    break;
+        if ImDensity2(Rxr(i),Rxc(i)) == 1 && floorPlanGray(Rxr(i),Rxc(i)) == 0
+            % 表示此區域不是佈建區域
+            Rxr(i) = -1;
+            Rxc(i) = -1;
+        else
+            if floorPlanGray(Rxr(i),Rxc(i))~=0
+                % 表示此區域為牆壁
+                while(1)
+                    t_Rxc = Rxc(i) + round(rand(1)*2-1);
+                    t_Rxr = Rxr(i) + round(rand(1)*2-1);
+                    if(floorPlanGray(t_Rxr,t_Rxc) == 0 && ImDensity2(t_Rxr,t_Rxc) == 0)
+                        Rxr(i) = t_Rxr;
+                        Rxc(i) = t_Rxc;
+                        break;
+                    end
                 end
             end
         end
     end
+    Rxr = Rxr(find(Rxr~=-1));
+    Rxc = Rxc(find(Rxc~=-1));
     save(Pixel_Setting,'pathUnit','meshNode','Rxc','Rxr');
 end
 
@@ -142,15 +151,19 @@ else
 end
 Density_map = zeros(1,size(Rxc,1));
 for i=1:1:size(Rxc,1)
-%     if ImDensity2(Rxr(i),Rxc(i)) ==1
+    Density_map(i)=Density;
+     if ImDensity2(Rxr(i),Rxc(i)) ==1
+         Density_map(i) =0 ;
+     end
+    %     if ImDensity2(Rxr(i),Rxc(i)) ==1
 %         Density_map(i) =0.07 ;
 %     else
 %         Density_map(i) =0.124 ;
 %     end
-    Density_map(i)=Density;
 end
 
 if TriangleDemo ==1
+    F_tri =figure;
     originalFloorPlan2 = im2bw(originalFloorPlan);
     originalFloorPlan2 =  ~imdilate(~originalFloorPlan,strel('disk',2));
     imshow(originalFloorPlan2);
@@ -159,7 +172,11 @@ if TriangleDemo ==1
 end
 
 %% Initialization
-initial_Tx = [1,meshNode.vert.num,meshNode.vert.num*((meshNode.horz.num)-1)+1,meshNode.vert.num*(meshNode.horz.num)];
+imshow(~floorPlanGray);
+text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'Color','red','FontSize',10);
+initial_Tx = [73,451,805,904,1,24,1213,1250,1259];
+% initial_Tx = [85,592,1,20,81,86,1113,1260,1705,1749,1760];
+% initial_Tx = [1,meshNode.vert.num,meshNode.vert.num*((meshNode.horz.num)-1)+1,meshNode.vert.num*(meshNode.horz.num)];
 Tx_ind = zeros(1,size(Rxc,1));
 Tx_Record = zeros(1,size(Rxc,1));
 Queue_ind = zeros(1,size(Rxc,1));
@@ -168,7 +185,9 @@ q_num = length(find(Tx_ind==1));
 GW_Num = length(find(Tx_ind==1));
 Queue_ind(initial_Tx) = [1:1:GW_Num];
 Finish_P = zeros(1,size(Rxc,1));
-Range = 4;
+Range = 8;
+Utility_Tres = 1;
+text(Rxc(initial_Tx),Rxr(initial_Tx),'*','Color','blue','FontSize',10);
 
 %% Calculate Covering range
 CoverRange_perPixel = zeros(size(Rxc,1),size(Rxc,1));
@@ -208,6 +227,7 @@ while (1)
     [Sort_D,ind_D] = sort(Distance_perPixel(Cur_P,:));
     ind_D = ind_D(find(GW_Pathloss_perPixel(Cur_P,ind_D)>=TxP_Thres));
     CurP_Served2 = Calculate_Range(Density_map,Sort_D,ind_D,GW_Serve_Limit);
+%     CurP_Served2 = Calculate_ServingRange(Density_map,Sort_D,ind_D,GW_Serve_Limit,TxP_Thres);
 
     CurP_Served = (CurP_Served1 | CurP_Served2);
     CurP_Covered = find(CoverRange_perPixel(Cur_P,:)==1);
@@ -234,7 +254,7 @@ while (1)
                 if Tri_Utility == 1 && length(find(InsideTri_P.*(~Finish_P)))>0
                     fprintf('FInish::::CurP = %d,Link = %d,Candidate = %d\n',Cur_P,Link(k),Candidate_P(j));
                     Finish_P = or(Finish_P , InsideTri_P);
-                    if TriangleDemo ==1
+                    if TriangleDemo == 2
                         % draw the triangle
                         x= [Rxc(Cur_P),Rxc(Candidate_P(j)),Rxc(Link(k)),Rxc(Cur_P)];
                         y= [Rxr(Cur_P),Rxr(Candidate_P(j)),Rxr(Link(k)),Rxr(Cur_P)];
@@ -247,7 +267,15 @@ while (1)
      
     %% Is GW_cur’s serving range (S_cur) fulfilled the constraint?
     CurP_Utility = Constraint_Fulfilled(find(CurP_Served==1),User_Served,User_Arc);
-    if CurP_Utility < 1 || length(find((CurP_Served.*(Finish_P|Tx_ind))==1)) < length(find((CurP_Served==1)))
+    if TriangleDemo == 2
+        figure;
+        imshow(floorPlanBW);
+        text(Rxc(Tx_ind==1),Rxr(Tx_ind==1),'*','Color','green','FontSize',20);
+        text(Rxc(CoverRange_perPixel(Cur_P,:)==1),Rxr(CoverRange_perPixel(Cur_P,:)==1),'o','Color','Black','FontSize',10);
+        text(Rxc(CurP_Served==1),Rxr(CurP_Served==1),'x','Color','red','FontSize',10);
+
+    end
+    if CurP_Utility < Utility_Tres || length(find((CurP_Served.*(Finish_P|Tx_ind))==1)) < length(find((CurP_Served==1)))
         % find the GW  from the covering range as the candidate link
         candidate_link = find(Queue_ind > t_value);
         Link = intersect(candidate_link , CurP_Covered);
@@ -280,8 +308,8 @@ while (1)
                             Tri_Utility = Constraint_Fulfilled(find(InsideTri_P==1),try_User_Served,try_User_Arc);
                             Fitness =  (Fitness)*(length(find((InsideTri_P.*CurP_Served)==1))-length(find((InsideTri_P.*Finish_P.*CurP_Served)==1)));
                             % best utility or current point 's served range is finished
-                            if ((Fitness > Temp_Fitness) || Cur_Utility >= 1 )&& Tri_Utility==1
-                                if Cur_Utility >=1
+                            if ((Fitness > Temp_Fitness) || Cur_Utility >= Utility_Tres )&& Tri_Utility==1
+                                if Cur_Utility >=Utility_Tres
                                     if Cur_Finish == 0
                                         Temp_Fitness = Fitness;
                                         Temp_P = Candidate_P(j);
@@ -332,7 +360,7 @@ while (1)
                 end
                 [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result(GW_Pathloss_perPixel,CoverRange_perPixel,Tx_ind,Rxr,Rxc,TxP_Thres,GW_Serve_Limit,Density_map);
                 Cur_Utility = Constraint_Fulfilled(find(CurP_Served==1),User_Served,User_Arc);
-                if Cur_Utility >=1
+                if Cur_Utility >= Utility_Tres
                     break;
                 end
             end
@@ -374,32 +402,45 @@ while (1)
    %% Are all pixels fulfilled the constraint?
     [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result(GW_Pathloss_perPixel,CoverRange_perPixel,Tx_ind,Rxr,Rxc,TxP_Thres,GW_Serve_Limit,Density_map);
     All_Utility = Constraint_Fulfilled([1:1:size(Rxc,1)],User_Served,User_Arc);
-    if All_Utility >= 1 || length(find(Finish_P==0))==0
+    if All_Utility >= Utility_Tres || length(find(Finish_P==0))==0
         fprintf('All points are finished\n');
         break;
     end
 end
 GW_Num = q_num;
-% filename = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity'];
-% save(filename,'Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Served','User_Arc','GW_Serve_Limit');
+filename = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity0.06'];
+save(filename,'Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map');
 %% Applying color map
-originalFloorPlan = ~imdilate(~floorPlanBW,strel('disk',2));
-smallFSPLImage = (reshape(lossdB,meshNode.vert.num, meshNode.horz.num));
-FSPLFullImage = (imresize(smallFSPLImage,[size(floorPlan,1),size(floorPlan,2)],'method','cubic'));
-FSPLFullImage = mat2gray(FSPLFullImage);
-figure('Name',['Path loss method ']);
-z = imoverlay(FSPLFullImage,~originalFloorPlan,[0,0,0]);
-imshow(rgb2gray(z));
-% text(Rxc,Rxr,num2str(int32(nodeDistance)),'FontSize',7);
-% text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'FontSize',7);
-text(Rxc,Rxr,num2str(User_Served(:,1)),'FontSize',10);
-%         text(Rxc,Rxr,num2str(int32(lossdB)'),'FontSize',10);
-colormap(gca,'jet');
+% originalFloorPlan = ~imdilate(~floorPlanBW,strel('disk',2));
+% smallFSPLImage = (reshape(lossdB,meshNode.vert.num, meshNode.horz.num));
+% FSPLFullImage = (imresize(smallFSPLImage,[size(floorPlan,1),size(floorPlan,2)],'method','cubic'));
+% FSPLFullImage = mat2gray(FSPLFullImage);
+% figure('Name',['Path loss method ']);
+% z = imoverlay(FSPLFullImage,~originalFloorPlan,[0,0,0]);
+% imshow(rgb2gray(z));
+% % text(Rxc,Rxr,num2str(int32(nodeDistance)),'FontSize',7);
+% % text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'FontSize',7);
+% text(Rxc,Rxr,num2str(User_Served(:,1)),'FontSize',10);
+% %         text(Rxc,Rxr,num2str(int32(lossdB)'),'FontSize',10);
+% colormap(gca,'jet');
+% 
+% for i = 1:7
+%     colorbarLabels(i) = min(lossdB) + i .* ((max(lossdB)-min(lossdB))./7);
+% end
+% colorbar('YTickLabel',num2str(int32(colorbarLabels')));
+% for i=1:1:size(Rxr,1)
+%     if Tx_ind(i) == 1
+%         text(Rxc(i),Rxr(i),'*','Color','Black','FontSize',30);
+%     end
+% %     if CoverRange_perPixel(Cur_P,i)==1
+% %         text(Rxc(i),Rxr(i),'o','Color','Black','FontSize',10);
+% %     end
+% end
+% title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
 
-for i = 1:7
-    colorbarLabels(i) = min(lossdB) + i .* ((max(lossdB)-min(lossdB))./7);
-end
-colorbar('YTickLabel',num2str(int32(colorbarLabels')));
+figure;
+imshow(floorPlanBW);
+% text(Rxc,Rxr,num2str(User_Served(:,1)),'FontSize',10);
 for i=1:1:size(Rxr,1)
     if Tx_ind(i) == 1
         text(Rxc(i),Rxr(i),'*','Color','Black','FontSize',30);
@@ -407,7 +448,12 @@ for i=1:1:size(Rxr,1)
 %     if CoverRange_perPixel(Cur_P,i)==1
 %         text(Rxc(i),Rxr(i),'o','Color','Black','FontSize',10);
 %     end
+%     if CurP_Served(i)==1
+%         text(Rxc(i),Rxr(i),'x','Color','red','FontSize',10);
+%     end
+%     if Finish_P(i)==1
+%         text(Rxc(i),Rxr(i),'x','Color','red','FontSize',10);
+%     end
 end
 title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
-
 
