@@ -141,7 +141,7 @@ for t = 1:1:size(Rxr,1)
         end
         Candidate_Pos = find(Cadidate_ind == 1);
         
-        [try_lossdB,try_User_Served,try_User_Covered,try_User_Arc] = Deploy_Result(GW_Pathloss_perPixel,Temp_Tx_ind,Rxr,Rxc,TxP_Thres,GW_Serve_Limit);
+        [try_lossdB,try_User_Served,try_User_Covered,try_User_Arc] = Deploy_Result(GW_Pathloss_perPixel,CoverRange_perPixel,Temp_Tx_ind,Rxr,Rxc,TxP_Thres,GW_Serve_Limit,Density_map);
         U2 = -10000;
         U3 = -10000;
         Have_local_best = 0;
