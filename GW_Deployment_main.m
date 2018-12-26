@@ -27,7 +27,7 @@ TxP_Thres = SNR_Thres + noise ;
 Data_Rate = (2*(256)*8)/1000; % kbps
 Max_throughput = 113; %kbps(BER=10^-3)
 Control_Period = 294.7580; %ms
-Density = 0.25;
+Density = 0.1;
 GW_Serve_Limit = floor((Max_throughput*(1000-Control_Period)/1000)/Data_Rate/3);
 PdBm_to_Pw = @(PdBm) 10^(PdBm/10);
 Pw_to_PdBm = @(Pw) 10*log10(Pw);
@@ -172,8 +172,8 @@ if TriangleDemo ==1
 end
 
 %% Initialization
-imshow(~floorPlanGray);
-text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'Color','red','FontSize',10);
+% imshow(~floorPlanGray);
+% text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'Color','red','FontSize',10);
 initial_Tx = [73,451,805,904,1,24,1213,1250,1259];
 % initial_Tx = [85,592,1,20,81,86,1113,1260,1705,1749,1760];
 % initial_Tx = [1,meshNode.vert.num,meshNode.vert.num*((meshNode.horz.num)-1)+1,meshNode.vert.num*(meshNode.horz.num)];
@@ -408,7 +408,7 @@ while (1)
     end
 end
 GW_Num = q_num;
-filename = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity0.06'];
+filename = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity_',Density,'.mat'];
 save(filename,'Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map');
 %% Applying color map
 % originalFloorPlan = ~imdilate(~floorPlanBW,strel('disk',2));
@@ -439,11 +439,11 @@ save(filename,'Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Serve
 % title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
 
 figure;
-imshow(floorPlanBW);
+imshow(floor_plan);
 % text(Rxc,Rxr,num2str(User_Served(:,1)),'FontSize',10);
 for i=1:1:size(Rxr,1)
     if Tx_ind(i) == 1
-        text(Rxc(i),Rxr(i),'*','Color','Black','FontSize',30);
+        text(Rxc(i),Rxr(i),'*','Color','Black','FontSize',20);
     end
 %     if CoverRange_perPixel(Cur_P,i)==1
 %         text(Rxc(i),Rxr(i),'o','Color','Black','FontSize',10);
