@@ -163,7 +163,7 @@ for i=1:1:size(Rxc,1)
 end
 
 if TriangleDemo ==1
-    F_tri =figure;
+    figure;
     originalFloorPlan2 = im2bw(originalFloorPlan);
     originalFloorPlan2 =  ~imdilate(~originalFloorPlan,strel('disk',2));
     imshow(originalFloorPlan2);
@@ -407,6 +407,7 @@ while (1)
         break;
     end
 end
+hold off;
 GW_Num = q_num;
 filename = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity_',Density,'.mat'];
 save(filename,'Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map');
