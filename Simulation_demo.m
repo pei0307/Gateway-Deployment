@@ -1,4 +1,3 @@
-clear;
 
 floor_plan = 'data\SKfloorplan_modify.png';
 floorPlan = imread(floor_plan);
@@ -20,16 +19,16 @@ load (Pixel_Setting) ;
 load (Pathloss_Distance);
 
 % [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result3(GW_Pathloss_perPixel,Tx_ind,Rxr,Rxc,-84.4505,GW_Serve_Limit);
-period = 10000;
+period = 1000;
 %% initialization1
 meanGServednum = [];
 FInishRate = [];
 WorstFinish = [];
 
-filename1 = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity0.06.mat'];
+filename1 = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity_Merge_0.1_1228','.mat'];
 load(filename1);
 [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result3(GW_Pathloss_perPixel,Tx_ind,Rxr,Rxc,-84.4505,GW_Serve_Limit);
-GW_Serve_Limit=6;
+GW_Serve_Limit=2;
 Result = [];
 Num_Record = zeros(100,1);
 for r =1:1:100
@@ -73,7 +72,7 @@ fprintf('Mean Rx Power :\n Proposed:%f \n',mean_Rxpower);
 fprintf('Mean GW Served :\n Proposed:%f \n',mean_GWserved);
 fprintf('Finish rate :\n Proposed:%f \n',Finish_rate);
 fprintf('Worst_case :\n Proposed:%f \n',Worst_case);
-sfilename = [floor_plan(1:length(floor_plan)-4),'_SimulationResult_Fealsible'];
+sfilename = [floor_plan(1:length(floor_plan)-4),'_SimulationResult_Fealsible_Merge_0,1_1228'];
 save(sfilename,'Num_Record','Result','Period_Result','Finish_rate','Worst_case','Tx_Result');
 meanGServednum = [meanGServednum;mean_GWserved];
 FInishRate = [FInishRate;Finish_rate];
@@ -81,23 +80,9 @@ WorstFinish = [WorstFinish;Worst_case];
 
 
 
-originalFloorPlan = imread(floor_plan);
-originalFloorPlan = im2bw(originalFloorPlan);
-originalFloorPlan =  ~imdilate(~originalFloorPlan,strel('disk',2));
-smallFSPLImage = (reshape(lossdB,meshNode.vert.num, meshNode.horz.num));
-FSPLFullImage = (imresize(smallFSPLImage,[size(originalFloorPlan,1),size(originalFloorPlan,2)],'method','cubic'));
-FSPLFullImage = mat2gray(FSPLFullImage);
-figure('Name',['Path loss method ']);
-z = imoverlay(FSPLFullImage,~originalFloorPlan,[0,0,0]);
-imshow(rgb2gray(z));
-text(Rxc,Rxr,num2str(int32(lossdB)'),'FontSize',8);
-D=3;
-mean_Tx = mean(Tx_Result);
-Tx_Num = length(find(Tx_ind==1));
-
 %%f1
 figure('Name',['Path loss method ']);
-imshow(~imdilate(~originalFloorPlan,strel('disk',2)));
+imshow(floorPlan);
 % text(Rxc,Rxr,num2str(int32(lossdB)'),'FontSize',8);
 % text(Rxc(Tx_ind==1),Rxr(Tx_ind==1),num2str(round(mean(Tx_Result))'),'FontSize',10);
 text(Rxc(Tx_ind==1),Rxr(Tx_ind==1),'*','Color','Black','FontSize',20);

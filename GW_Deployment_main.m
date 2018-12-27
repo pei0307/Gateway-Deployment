@@ -28,7 +28,8 @@ Data_Rate = (2*(256)*8)/1000; % kbps
 Max_throughput = 113; %kbps(BER=10^-3)
 Control_Period = 294.7580; %ms
 Density = 0.1;
-GW_Serve_Limit = floor((Max_throughput*(1000-Control_Period)/1000)/Data_Rate/3);
+% GW_Serve_Limit = floor((Max_throughput*(1000-Control_Period)/1000)/Data_Rate/3);
+GW_Serve_Limit = 2;
 PdBm_to_Pw = @(PdBm) 10^(PdBm/10);
 Pw_to_PdBm = @(Pw) 10*log10(Pw);
 
@@ -163,7 +164,7 @@ for i=1:1:size(Rxc,1)
 end
 
 if TriangleDemo ==1
-    figure;
+    F_tri =figure;
     originalFloorPlan2 = im2bw(originalFloorPlan);
     originalFloorPlan2 =  ~imdilate(~originalFloorPlan,strel('disk',2));
     imshow(originalFloorPlan2);
@@ -185,7 +186,7 @@ q_num = length(find(Tx_ind==1));
 GW_Num = length(find(Tx_ind==1));
 Queue_ind(initial_Tx) = [1:1:GW_Num];
 Finish_P = zeros(1,size(Rxc,1));
-Range = 8;
+Range = 4;
 Utility_Tres = 1;
 text(Rxc(initial_Tx),Rxr(initial_Tx),'*','Color','blue','FontSize',10);
 
@@ -407,10 +408,9 @@ while (1)
         break;
     end
 end
-hold off;
 GW_Num = q_num;
-filename = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity_',Density,'.mat'];
-save(filename,'Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map');
+filename = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity_',num2str(Density),'_1228.mat'];
+save(filename,'floor_plan','Pixel_Setting','Pathloss_Distance','Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range');
 %% Applying color map
 % originalFloorPlan = ~imdilate(~floorPlanBW,strel('disk',2));
 % smallFSPLImage = (reshape(lossdB,meshNode.vert.num, meshNode.horz.num));
@@ -446,7 +446,7 @@ for i=1:1:size(Rxr,1)
     if Tx_ind(i) == 1
         text(Rxc(i),Rxr(i),'*','Color','Black','FontSize',20);
     end
-%     if CoverRange_perPixel(Cur_P,i)==1
+%     if CoverRange_perPixel(1,i)==1
 %         text(Rxc(i),Rxr(i),'o','Color','Black','FontSize',10);
 %     end
 %     if CurP_Served(i)==1
@@ -457,4 +457,6 @@ for i=1:1:size(Rxr,1)
 %     end
 end
 title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
+
+Merge_Algorithm(floor_plan,0,1,filename,Range);
 
