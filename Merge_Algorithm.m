@@ -1,4 +1,4 @@
-function Merge_Algorithm(floor_plan,merge_method,Utility_Option,Result_filename,Range)
+function Merge_Algorithm(folder,merge_method,Utility_Option,Result_filename,Range)
 
 %%
 %2018/5/11
@@ -19,14 +19,12 @@ Pw_to_PdBm = @(Pw) 10*log10(Pw);
 Utility_func = @(P_r,P_int) log2(1+P_r/P_int);
 
 % floor_plan = 'data/SKfloorplan_modify.png';
-wall_detect = [floor_plan(1:length(floor_plan)-4),'_wall_detect.mat'];
-Pixel_Setting = [floor_plan(1:length(floor_plan)-4),'_pixel_Setting.mat'];
-Pathloss_Distance = [floor_plan(1:length(floor_plan)-4),'_PlandDis_perpixel.mat'];
-DeployResult = Result_filename;
-load (wall_detect) ;
+Pixel_Setting = [folder,'pixel_Setting.mat'];
+Pathloss_Distance = [folder,'PlandDis_perpixel.mat'];
+
 load (Pixel_Setting) ;
 load (Pathloss_Distance) ;
-load (DeployResult);
+load (Result_filename);
 
 U=[];
 Txc = Rxc;
@@ -203,8 +201,8 @@ for t = 1:1:GW_Num
     
     
 end
-filename = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity_Merge_',num2str(Density),'_1227.mat'];
-save(filename,'Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map');
+filename = [Result_filename(1:length(floor_plan)-4),'_Merge.mat'];
+save(filename,'TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
 %% Applying color map
 figure;
 imshow(floor_plan);

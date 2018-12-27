@@ -34,20 +34,23 @@ PdBm_to_Pw = @(PdBm) 10^(PdBm/10);
 Pw_to_PdBm = @(Pw) 10*log10(Pw);
 
 
+folder = 'data/SKfloorplan_modify/';
+floor_plan = [folder,'floorplan.png'];
+density_plan = [folder,'density.png'];
 
-floor_plan = 'data\SKfloorplan_modify.png';
-wall_detect = [floor_plan(1:length(floor_plan)-4),'_wall_detect.mat'];
-Pixel_Setting = [floor_plan(1:length(floor_plan)-4),'_pixel_Setting.mat'];
-Pathloss_Distance = [floor_plan(1:length(floor_plan)-4),'_PlandDis_perpixel.mat'];
+wall_detect = [folder,'wall_detect.mat'];
+Pixel_Setting = [folder,'pixel_Setting.mat'];
+Pathloss_Distance = [folder,'PlandDis_perpixel.mat'];
+
 
 
 
 % load floor plan
 floorPlan = imread(floor_plan);
-floorPlanBW = im2bw(floorPlan);
+floorPlanBW = ~im2bw(floorPlan);
 originalFloorPlan = floorPlanBW;
-ImDensity = imread('data\SKfloorplan_modify_avaliable.png');
-ImDensity2 = ~im2bw(ImDensity);
+ImDensity = imread(density_plan);
+ImDensityBW = ~im2bw(ImDensity);
 
 % wall detection
 if exist(wall_detect, 'file')
@@ -111,7 +114,7 @@ else
     % finding the nodes
     [Rxr,Rxc] = find(floorMesh == 1);
     for i=1:1:size(Rxr,1)
-        if ImDensity2(Rxr(i),Rxc(i)) == 1 && floorPlanGray(Rxr(i),Rxc(i)) == 0
+        if ImDensityBW(Rxr(i),Rxc(i)) == 1 && floorPlanGray(Rxr(i),Rxc(i)) == 0
             % 表示此區域不是佈建區域
             Rxr(i) = -1;
             Rxc(i) = -1;
@@ -121,7 +124,7 @@ else
                 while(1)
                     t_Rxc = Rxc(i) + round(rand(1)*2-1);
                     t_Rxr = Rxr(i) + round(rand(1)*2-1);
-                    if(floorPlanGray(t_Rxr,t_Rxc) == 0 && ImDensity2(t_Rxr,t_Rxc) == 0)
+                    if(floorPlanGray(t_Rxr,t_Rxc) == 0 && ImDensityBW(t_Rxr,t_Rxc) == 0)
                         Rxr(i) = t_Rxr;
                         Rxc(i) = t_Rxc;
                         break;
@@ -153,7 +156,7 @@ end
 Density_map = zeros(1,size(Rxc,1));
 for i=1:1:size(Rxc,1)
     Density_map(i)=Density;
-     if ImDensity2(Rxr(i),Rxc(i)) ==1
+     if ImDensityBW(Rxr(i),Rxc(i)) ==1
          Density_map(i) =0 ;
      end
     %     if ImDensity2(Rxr(i),Rxc(i)) ==1
@@ -165,7 +168,6 @@ end
 
 if TriangleDemo ==1
     F_tri =figure;
-    originalFloorPlan2 = im2bw(originalFloorPlan);
     originalFloorPlan2 =  ~imdilate(~originalFloorPlan,strel('disk',2));
     imshow(originalFloorPlan2);
     text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'FontSize',7);
@@ -179,7 +181,6 @@ initial_Tx = [73,451,805,904,1,24,1213,1250,1259];
 % initial_Tx = [85,592,1,20,81,86,1113,1260,1705,1749,1760];
 % initial_Tx = [1,meshNode.vert.num,meshNode.vert.num*((meshNode.horz.num)-1)+1,meshNode.vert.num*(meshNode.horz.num)];
 Tx_ind = zeros(1,size(Rxc,1));
-Tx_Record = zeros(1,size(Rxc,1));
 Queue_ind = zeros(1,size(Rxc,1));
 Tx_ind(initial_Tx) =1;
 q_num = length(find(Tx_ind==1));
@@ -409,8 +410,10 @@ while (1)
     end
 end
 GW_Num = q_num;
-filename = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity_',num2str(Density),'_1228.mat'];
-save(filename,'floor_plan','Pixel_Setting','Pathloss_Distance','Density','lossdB','Tx_ind','Tx_Record','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range');
+subfolder = datestr(datetime);
+mkdir([folder,subfolder]);
+filename = [folder,subfolder,'/DeployResult.mat'];
+save(filename,'TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
 %% Applying color map
 % originalFloorPlan = ~imdilate(~floorPlanBW,strel('disk',2));
 % smallFSPLImage = (reshape(lossdB,meshNode.vert.num, meshNode.horz.num));
@@ -458,5 +461,5 @@ for i=1:1:size(Rxr,1)
 end
 title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
 
-Merge_Algorithm(floor_plan,0,1,filename,Range);
+Merge_Algorithm(folder,0,1,filename);
 

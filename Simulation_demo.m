@@ -1,20 +1,16 @@
 
-floor_plan = 'data\SKfloorplan_modify.png';
+folder = 'data\SKfloorplan_modify\';
+sub_folder = ''
+floor_plan = [folder,'floorplan.png'];
+density_plan = [folder,'density.png'];
+
+Pixel_Setting = [folder,'pixel_Setting.mat'];
+Pathloss_Distance = [folder,'PlandDis_perpixel.mat'];
+
 floorPlan = imread(floor_plan);
 floorPlanBW = ~im2bw(floorPlan);
-% adjusting the image if required
-try
-    [co,bi] = imhist(floorPlanBW);
-    
-    if bi(1) == 0 && co(1) > co(2)
-        floorPlanBW = ~floorPlanBW; % complements the image if not in correct form so that the structure will be in Black in case it's not
-    end
-catch
-end
 originalFloorPlan = floorPlanBW; % At this point, Structure in Original Image and floorPlanBW is in black
-GW_Serve_Limit =6;
-Pixel_Setting = [floor_plan(1:length(floor_plan)-4),'_pixel_Setting.mat'];
-Pathloss_Distance = [floor_plan(1:length(floor_plan)-4),'_PlandDis_perpixel.mat'];
+
 load (Pixel_Setting) ;
 load (Pathloss_Distance);
 
@@ -25,7 +21,7 @@ meanGServednum = [];
 FInishRate = [];
 WorstFinish = [];
 
-filename1 = [floor_plan(1:length(floor_plan)-4),'_flexibleDensity_Merge_0.1_1228','.mat'];
+filename1 = [folder,sub_folder,'DeployResult.mat'];
 load(filename1);
 [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result3(GW_Pathloss_perPixel,Tx_ind,Rxr,Rxc,-84.4505,GW_Serve_Limit);
 GW_Serve_Limit=2;
@@ -72,7 +68,7 @@ fprintf('Mean Rx Power :\n Proposed:%f \n',mean_Rxpower);
 fprintf('Mean GW Served :\n Proposed:%f \n',mean_GWserved);
 fprintf('Finish rate :\n Proposed:%f \n',Finish_rate);
 fprintf('Worst_case :\n Proposed:%f \n',Worst_case);
-sfilename = [floor_plan(1:length(floor_plan)-4),'_SimulationResult_Fealsible_Merge_0,1_1228'];
+sfilename = [folder,sub_folder,'SimulationResult.mat'];
 save(sfilename,'Num_Record','Result','Period_Result','Finish_rate','Worst_case','Tx_Result');
 meanGServednum = [meanGServednum;mean_GWserved];
 FInishRate = [FInishRate;Finish_rate];
