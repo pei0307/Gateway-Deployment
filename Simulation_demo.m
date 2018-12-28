@@ -1,11 +1,11 @@
 
 folder = 'data\SKfloorplan_modify\';
-sub_folder = ''
+sub_folder = '';
+filename = [folder,sub_folder,'DeployResult.mat'];
+load(filename);
+
 floor_plan = [folder,'floorplan.png'];
 density_plan = [folder,'density.png'];
-
-Pixel_Setting = [folder,'pixel_Setting.mat'];
-Pathloss_Distance = [folder,'PlandDis_perpixel.mat'];
 
 floorPlan = imread(floor_plan);
 floorPlanBW = ~im2bw(floorPlan);
@@ -21,8 +21,7 @@ meanGServednum = [];
 FInishRate = [];
 WorstFinish = [];
 
-filename1 = [folder,sub_folder,'DeployResult.mat'];
-load(filename1);
+
 [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result3(GW_Pathloss_perPixel,Tx_ind,Rxr,Rxc,-84.4505,GW_Serve_Limit);
 GW_Serve_Limit=2;
 Result = [];

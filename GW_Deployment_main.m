@@ -42,12 +42,9 @@ wall_detect = [folder,'wall_detect.mat'];
 Pixel_Setting = [folder,'pixel_Setting.mat'];
 Pathloss_Distance = [folder,'PlandDis_perpixel.mat'];
 
-
-
-
 % load floor plan
 floorPlan = imread(floor_plan);
-floorPlanBW = ~im2bw(floorPlan);
+floorPlanBW = im2bw(floorPlan);
 originalFloorPlan = floorPlanBW;
 ImDensity = imread(density_plan);
 ImDensityBW = ~im2bw(ImDensity);
@@ -170,7 +167,7 @@ if TriangleDemo ==1
     F_tri =figure;
     originalFloorPlan2 =  ~imdilate(~originalFloorPlan,strel('disk',2));
     imshow(originalFloorPlan2);
-    text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'FontSize',7);
+%     text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'FontSize',7);
     hold on;
 end
 
@@ -410,10 +407,10 @@ while (1)
     end
 end
 GW_Num = q_num;
-subfolder = datestr(datetime);
+subfolder = datestr(now,30);
 mkdir([folder,subfolder]);
 filename = [folder,subfolder,'/DeployResult.mat'];
-save(filename,'TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
+save(filename,'Pixel_Setting','Pathloss_Distance','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
 %% Applying color map
 % originalFloorPlan = ~imdilate(~floorPlanBW,strel('disk',2));
 % smallFSPLImage = (reshape(lossdB,meshNode.vert.num, meshNode.horz.num));
@@ -461,5 +458,6 @@ for i=1:1:size(Rxr,1)
 end
 title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
 
-Merge_Algorithm(folder,0,1,filename);
-
+ [ lossdB,Tx_ind,User_Covered,User_Served,User_Arc,GW_Num ] = Merge_Algorithm(folder,0,1,filename);
+Merge_filename = [Result_filename(1:length(floor_plan)-4),'_Merge.mat'];
+save(Merge_filename,'Pixel_Setting','Pathloss_Distance','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');

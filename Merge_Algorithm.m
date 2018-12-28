@@ -1,4 +1,4 @@
-function Merge_Algorithm(folder,merge_method,Utility_Option,Result_filename,Range)
+function [ lossdB,Tx_ind,User_Covered,User_Served,User_Arc,GW_Num ] = Merge_Algorithm(folder,merge_method,Utility_Option,Result_filename,Range)
 
 %%
 %2018/5/11
@@ -18,7 +18,6 @@ PdBm_to_Pw = @(PdBm) 10^(PdBm/10);
 Pw_to_PdBm = @(Pw) 10*log10(Pw);
 Utility_func = @(P_r,P_int) log2(1+P_r/P_int);
 
-% floor_plan = 'data/SKfloorplan_modify.png';
 Pixel_Setting = [folder,'pixel_Setting.mat'];
 Pathloss_Distance = [folder,'PlandDis_perpixel.mat'];
 
@@ -201,19 +200,18 @@ for t = 1:1:GW_Num
     
     
 end
-filename = [Result_filename(1:length(floor_plan)-4),'_Merge.mat'];
-save(filename,'TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
+
 %% Applying color map
-figure;
-imshow(floor_plan);
-for i=1:1:size(Rxr,1)
-    if Tx_ind(i) == 1
-        text(Rxc(i),Rxr(i),'*','Color','Black','FontSize',20);
-    end
-end
-text(Rxc(Candidate_Pos),Rxr(Candidate_Pos),'o','Color','red','FontSize',10);
-text(Rxc(Txind_to_Rxind(All_Link(k,1))),Rxr(Txind_to_Rxind(All_Link(k,1))),'*','Color','red','FontSize',30);
-text(Rxc(Txind_to_Rxind(All_Link(k,2))),Rxr(Txind_to_Rxind(All_Link(k,2))),'*','Color','red','FontSize',30);
+% figure;
+% imshow(floor_plan);
+% for i=1:1:size(Rxr,1)
+%     if Tx_ind(i) == 1
+%         text(Rxc(i),Rxr(i),'*','Color','Black','FontSize',20);
+%     end
+% end
+% text(Rxc(Candidate_Pos),Rxr(Candidate_Pos),'o','Color','red','FontSize',10);
+% text(Rxc(Txind_to_Rxind(All_Link(k,1))),Rxr(Txind_to_Rxind(All_Link(k,1))),'*','Color','red','FontSize',30);
+% text(Rxc(Txind_to_Rxind(All_Link(k,2))),Rxr(Txind_to_Rxind(All_Link(k,2))),'*','Color','red','FontSize',30);
 
 %%%%%%%%%%%%%%%%5  REFERENCES  %%%%%%%%%%
 % http://uk.mathworks.com/matlabcentral/fileexchange/28190-bresenham-optimized-for-matlab/content/bresenham.m
