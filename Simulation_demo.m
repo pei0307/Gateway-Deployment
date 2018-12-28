@@ -1,11 +1,10 @@
 
-folder = 'data/SKfloorplan_modify/';
-sub_folder = '20181228T204204';
-filename = [folder,sub_folder,'/DeployResult_Merge.mat'];
+folder = 'data/small_thin/';
+sub_folder = '20181229T003119';
+filename = [folder,sub_folder,'/DeployResult.mat'];
 load(filename);
 
-floor_plan = [folder,'floorplan.png'];
-density_plan = [folder,'density.png'];
+floor_plan = [folder,'floorplan.bmp'];
 
 floorPlan = imread(floor_plan);
 floorPlanBW = ~im2bw(floorPlan);
@@ -15,7 +14,7 @@ load (Pixel_Setting) ;
 load (Pathloss_Distance);
 
 % [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result3(GW_Pathloss_perPixel,Tx_ind,Rxr,Rxc,-84.4505,GW_Serve_Limit);
-period = 10000;
+period = 1000;
 %% initialization1
 meanGServednum = [];
 FInishRate = [];
@@ -23,10 +22,9 @@ WorstFinish = [];
 
 
 [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result3(GW_Pathloss_perPixel,Tx_ind,Rxr,Rxc,-84.4505,GW_Serve_Limit);
-GW_Serve_Limit=2;
 Result = [];
-Num_Record = zeros(100,1);
-for r =1:1:100
+Num_Record = zeros(1,period);
+for r =1:1:period
     User = zeros(size(Rxc,1),4);
     User_num = 0;
     for i=1:1:size(Rxc,1)
@@ -40,7 +38,7 @@ for r =1:1:100
     % User = 1:path /2:angle record
     %Result
     Tx_Result =[];
-    for t = 1 : 1 : period
+    for t = 1 : 1 : 100
         [User,Tx_Record] = GW_Assignment(User,Rxc,Rxr,User_num,User_Covered,User_Arc,GW_Serve_Limit);
         Result = [Result;length(find(User(1:User_num,3)==0))/User_num,sum(User(1:User_num,4))/length(find(User(1:User_num,3)~=0)),length(find(User(1:User_num,3)~=0))];
         Tx_Result = [Tx_Result;Tx_Record(find(Tx_ind>0))];

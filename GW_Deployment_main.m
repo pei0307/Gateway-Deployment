@@ -34,9 +34,9 @@ PdBm_to_Pw = @(PdBm) 10^(PdBm/10);
 Pw_to_PdBm = @(Pw) 10*log10(Pw);
 
 
-folder = 'data/SKfloorplan_modify/';
-floor_plan = [folder,'floorplan.png'];
-density_plan = [folder,'density.png'];
+folder = 'data/small_thin/';
+floor_plan = [folder,'floorplan.bmp'];
+density_plan = [folder,'density.bmp'];
 
 wall_detect = [folder,'wall_detect.mat'];
 Pixel_Setting = [folder,'pixel_Setting.mat'];
@@ -46,8 +46,12 @@ Pathloss_Distance = [folder,'PlandDis_perpixel.mat'];
 floorPlan = imread(floor_plan);
 floorPlanBW = im2bw(floorPlan);
 originalFloorPlan = floorPlanBW;
-ImDensity = imread(density_plan);
-ImDensityBW = ~im2bw(ImDensity);
+if exist(density_plan, 'file')
+    ImDensity = imread(density_plan);
+    ImDensityBW = ~im2bw(ImDensity);
+else
+    ImDensityBW = ~floorPlanBW;
+end
 
 % wall detection
 if exist(wall_detect, 'file')
@@ -174,9 +178,9 @@ end
 %% Initialization
 % imshow(~floorPlanGray);
 % text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'Color','red','FontSize',10);
-initial_Tx = [73,451,805,904,1,24,1213,1250,1259];
+% initial_Tx = [73,451,805,904,1,24,1213,1250,1259];
 % initial_Tx = [85,592,1,20,81,86,1113,1260,1705,1749,1760];
-% initial_Tx = [1,meshNode.vert.num,meshNode.vert.num*((meshNode.horz.num)-1)+1,meshNode.vert.num*(meshNode.horz.num)];
+initial_Tx = [1,meshNode.vert.num,meshNode.vert.num*((meshNode.horz.num)-1)+1,meshNode.vert.num*(meshNode.horz.num)];
 Tx_ind = zeros(1,size(Rxc,1));
 Queue_ind = zeros(1,size(Rxc,1));
 Tx_ind(initial_Tx) =1;
