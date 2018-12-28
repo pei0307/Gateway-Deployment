@@ -1,7 +1,7 @@
 
-folder = 'data\SKfloorplan_modify\';
-sub_folder = '';
-filename = [folder,sub_folder,'DeployResult.mat'];
+folder = 'data/SKfloorplan_modify/';
+sub_folder = '20181228T204204';
+filename = [folder,sub_folder,'/DeployResult_Merge.mat'];
 load(filename);
 
 floor_plan = [folder,'floorplan.png'];
@@ -15,7 +15,7 @@ load (Pixel_Setting) ;
 load (Pathloss_Distance);
 
 % [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result3(GW_Pathloss_perPixel,Tx_ind,Rxr,Rxc,-84.4505,GW_Serve_Limit);
-period = 1000;
+period = 10000;
 %% initialization1
 meanGServednum = [];
 FInishRate = [];
@@ -67,7 +67,7 @@ fprintf('Mean Rx Power :\n Proposed:%f \n',mean_Rxpower);
 fprintf('Mean GW Served :\n Proposed:%f \n',mean_GWserved);
 fprintf('Finish rate :\n Proposed:%f \n',Finish_rate);
 fprintf('Worst_case :\n Proposed:%f \n',Worst_case);
-sfilename = [folder,sub_folder,'SimulationResult.mat'];
+sfilename = [filename(1:length(filename)-4),'_SimulationResult.mat'];
 save(sfilename,'Num_Record','Result','Period_Result','Finish_rate','Worst_case','Tx_Result');
 meanGServednum = [meanGServednum;mean_GWserved];
 FInishRate = [FInishRate;Finish_rate];

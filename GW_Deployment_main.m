@@ -446,18 +446,19 @@ for i=1:1:size(Rxr,1)
     if Tx_ind(i) == 1
         text(Rxc(i),Rxr(i),'*','Color','Black','FontSize',20);
     end
-%     if CoverRange_perPixel(1,i)==1
-%         text(Rxc(i),Rxr(i),'o','Color','Black','FontSize',10);
-%     end
-%     if CurP_Served(i)==1
-%         text(Rxc(i),Rxr(i),'x','Color','red','FontSize',10);
-%     end
-%     if Finish_P(i)==1
-%         text(Rxc(i),Rxr(i),'x','Color','red','FontSize',10);
-%     end
 end
 title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
 
  [ lossdB,Tx_ind,User_Covered,User_Served,User_Arc,GW_Num ] = Merge_Algorithm(folder,0,1,filename);
-Merge_filename = [Result_filename(1:length(floor_plan)-4),'_Merge.mat'];
+Merge_filename =[folder,subfolder,'/DeployResult_Merge.mat'];
 save(Merge_filename,'Pixel_Setting','Pathloss_Distance','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
+
+figure;
+imshow(floor_plan);
+% text(Rxc,Rxr,num2str(User_Served(:,1)),'FontSize',10);
+for i=1:1:size(Rxr,1)
+    if Tx_ind(i) == 1
+        text(Rxc(i),Rxr(i),'*','Color','Black','FontSize',20);
+    end
+end
+title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
