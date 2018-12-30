@@ -51,16 +51,9 @@ for i=1:1:size(Rxr,1)
         for r=1:1:length(low_arc)
             User_Arc{i,5} = User_Arc{i,5} + (top_arc(r) - low_arc(r) + 1);
         end
-        if User_Arc{i,5} >= 360
-            if(j==1)
-                j=j+1;
-            end
-            User_Arc{i,7} = j;
-            break;
-        else
-            User_Arc{i,1}=User_Arc{i,3};
-            User_Arc{i,2}=User_Arc{i,4};
-        end     
+        User_Arc{i,1}=User_Arc{i,3};
+        User_Arc{i,2}=User_Arc{i,4};
+     
     end
 end
 temp_Tx = find(Tx_ind==1);

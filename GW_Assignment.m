@@ -1,4 +1,4 @@
-function [User,Tx_Record] = GW_Assignment(User,Rxc,Rxr,User_num,User_Covered,User_Arc,GW_Serve_Limit)
+function [User,Tx_Record,Fail_ind] = GW_Assignment(User,Rxc,Rxr,User_num,User_Covered,User_Arc,GW_Serve_Limit,Fail_ind)
 User(:,3) = 0;
 User(:,4) = 0;
 Tx_Record = zeros(1,size(Rxc,1));
@@ -15,6 +15,9 @@ for i=1:1:User_num
             Tx_Record( User_Covered.GW{User(i)}(j)) = Tx_Record( User_Covered.GW{User(i)}(j))+1;
             break;
         end
+    end
+    if User(i,3) == 0
+        Fail_ind(User(i,1)) = Fail_ind(User(i,1))+1;
     end
 end
 end
