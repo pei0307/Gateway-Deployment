@@ -34,9 +34,9 @@ PdBm_to_Pw = @(PdBm) 10^(PdBm/10);
 Pw_to_PdBm = @(Pw) 10*log10(Pw);
 
 
-folder = 'data/small_thin/';
-floor_plan = [folder,'floorplan.bmp'];
-density_plan = [folder,'density.bmp'];
+folder = 'data/SKroom/';
+floor_plan = [folder,'floorplan.jpg'];
+density_plan = [folder,'density.jpg'];
 
 wall_detect = [folder,'wall_detect.mat'];
 Pixel_Setting = [folder,'pixel_Setting.mat'];
@@ -144,7 +144,7 @@ if exist(Pathloss_Distance,'file')
 else
     %% Calculate_Pathloss
     Tx_ind = ones(1,size(Rxc,1));
-    GW_Pathloss_perPixel = Calculate_Pathloss(originalFloorPlan,floorPlanGray,wallAt,pathLossModel,Tx_ind,Rxc,Rxr,pathUnit,TxP_Thres);
+    [GW_Pathloss_perPixel , isWall_perPixel] = Calculate_Pathloss(originalFloorPlan,floorPlanGray,wallAt,pathLossModel,Tx_ind,Rxc,Rxr,pathUnit,TxP_Thres);
     %% Calculate_Distance
     Distance_perPixel = zeros(size(Rxc,1),size(Rxc,1));
     for i=1:1:size(Rxc,1)
@@ -152,7 +152,7 @@ else
             Distance_perPixel(i,j) = sqrt((Rxc(i)-Rxc(j))^2+(Rxr(i)-Rxr(j))^2);
         end
     end
-    save(Pathloss_Distance,'GW_Pathloss_perPixel','Distance_perPixel');
+    save(Pathloss_Distance,'GW_Pathloss_perPixel','Distance_perPixel','isWall_perPixel');
 end
 Density_map = zeros(1,size(Rxc,1));
 for i=1:1:size(Rxc,1)
@@ -176,11 +176,11 @@ if TriangleDemo ==1
 end
 
 %% Initialization
-% imshow(~floorPlanGray);
-% text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'Color','red','FontSize',10);
-% initial_Tx = [73,451,805,904,1,24,1213,1250,1259];
+imshow(~imdilate(floorPlanGray,strel('disk',2)));
+text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'Color','red','FontSize',10);
+initial_Tx = [73,451,805,904,1,24,1213,1250,1259];
 % initial_Tx = [85,592,1,20,81,86,1113,1260,1705,1749,1760];
-initial_Tx = [1,meshNode.vert.num,meshNode.vert.num*((meshNode.horz.num)-1)+1,meshNode.vert.num*(meshNode.horz.num)];
+% initial_Tx = [1,meshNode.vert.num,meshNode.vert.num*((meshNode.horz.num)-1)+1,meshNode.vert.num*(meshNode.horz.num)];
 Tx_ind = zeros(1,size(Rxc,1));
 Queue_ind = zeros(1,size(Rxc,1));
 Tx_ind(initial_Tx) =1;
@@ -188,7 +188,7 @@ q_num = length(find(Tx_ind==1));
 GW_Num = length(find(Tx_ind==1));
 Queue_ind(initial_Tx) = [1:1:GW_Num];
 Finish_P = zeros(1,size(Rxc,1));
-Range = 4;
+Range = 10;
 Utility_Tres = 1;
 text(Rxc(initial_Tx),Rxr(initial_Tx),'*','Color','blue','FontSize',10);
 
@@ -414,7 +414,7 @@ GW_Num = q_num;
 subfolder = datestr(now,30);
 mkdir([folder,subfolder]);
 filename = [folder,subfolder,'/DeployResult.mat'];
-save(filename,'Pixel_Setting','Pathloss_Distance','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
+save(filename,'floorPlan','Pixel_Setting','Pathloss_Distance','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
 %% Applying color map
 % originalFloorPlan = ~imdilate(~floorPlanBW,strel('disk',2));
 % smallFSPLImage = (reshape(lossdB,meshNode.vert.num, meshNode.horz.num));
@@ -453,7 +453,7 @@ for i=1:1:size(Rxr,1)
 end
 title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
 
- [ lossdB,Tx_ind,User_Covered,User_Served,User_Arc,GW_Num ] = Merge_Algorithm(folder,0,1,filename);
+ [ lossdB,Tx_ind,User_Covered,User_Served,User_Arc,GW_Num ] = Merge_Algorithm(folder,0,filename,Range);
 Merge_filename =[folder,subfolder,'/DeployResult_Merge.mat'];
 save(Merge_filename,'Pixel_Setting','Pathloss_Distance','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
 

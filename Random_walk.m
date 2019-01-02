@@ -1,45 +1,47 @@
-function User  = Random_walk(User,User_num,meshNode)
+function User  = Random_walk(User,User_num,meshNode,Distance_perPixel,isWall_perPixel)
 
 for i=1:1:User_num
     while(1)
         angle = randi([0,8]);
         user_id =  User(i,1);
-        if User(i,1) <= size(User,1)
-            if angle == 0 && User(i,1)+meshNode.vert.num<=size(User,1) &&User(i,1)+meshNode.vert.num>0
-                User(i,1) = User(i,1)+meshNode.vert.num;
-                User(i,2) = angle*45;
+        [Dis,ind] = sort(Distance_perPixel(user_id,:));
+        pixel = Dis(2);
+        if angle ~= 0
+            if Dis(angle)<=pixel+1 && ind(angle) == user_id-1 %上
+                User(i,1) =  ind(angle);
+                User(i,2) = (angle-1)*45;
                 break;
-            elseif  angle == 1 && User(i,1)+meshNode.vert.num-1<=size(User,1)&&User(i,1)+meshNode.vert.num-1>0
-                User(i,1) = User(i,1)+meshNode.vert.num-1;
-                User(i,2) = angle*45;
+            elseif Dis(angle)<=pixel+1 && ind(angle) == user_id+1 %下
+                User(i,1) =  ind(angle);
+                User(i,2) = (angle-1)*45;
                 break;
-            elseif angle == 2 && User(i,1)-1 <=size(User,1)&&User(i,1)-1>0
-                User(i,1) = User(i,1)-1;
-                User(i,2) = angle*45;
+            elseif Dis(angle) <= pixel+1 && ind(angle) < user_id %左
+                User(i,1) =  ind(angle);
+                User(i,2) = (angle-1)*45;
                 break;
-            elseif angle == 3 && User(i,1)-meshNode.vert.num-1 <= size(User,1)&&User(i,1)-meshNode.vert.num-1>0
-                User(i,1) = User(i,1)-meshNode.vert.num-1;
-                User(i,2) = angle*45;
+            elseif Dis(angle) <= pixel+1 && ind(angle) > user_id %右
+                User(i,1) =  ind(angle);
+                User(i,2) = (angle-1)*45;
                 break;
-            elseif angle == 4 && User(i,1)-meshNode.vert.num <= size(User,1) && User(i,1)-meshNode.vert.num>0
-                User(i,1) = User(i,1)-meshNode.vert.num;
-                User(i,2) = angle*45;
+            elseif Dis(angle) < 2*pixel && ind(angle) < user_id && ind(angle) ==  min(ind) %左上
+                User(i,1) =  ind(angle);
+                User(i,2) = (angle-1)*45;
                 break;
-            elseif angle == 5  && User(i,1)-meshNode.vert.num+1 <= size(User,1) && User(i,1)-meshNode.vert.num+1>0
-                User(i,1) = User(i,1)-meshNode.vert.num+1;
-                User(i,2) = angle*45;
+            elseif Dis(angle) < 2*pixel && ind(angle) < user_id %左下
+                User(i,1) =  ind(angle);
+                User(i,2) = (angle-1)*45;
                 break;
-            elseif angle == 6 &&  User(i,1)+1 <= size(User,1)
-                User(i,1) = User(i,1)+1;
-                User(i,2) = angle*45;
+            elseif Dis(angle) < 2*pixel && ind(angle) > user_id && ind(angle) ==  max(ind) %右下
+                User(i,1) =  ind(angle);
+                User(i,2) = (angle-1)*45;
                 break;
-            elseif angle == 7 && User(i,1)+meshNode.vert.num+1 <=size(User,1) && User(i,1)+meshNode.vert.num+1>0
-                User(i,1) = User(i,1)+meshNode.vert.num+1;
-                User(i,2) = angle*45;
-                break;
-            elseif angle == 8
+            elseif Dis(angle) < 2*pixel && ind(angle) > user_id %右上
+                User(i,1) =  ind(angle);
+                User(i,2) = (angle-1)*45;
                 break;
             end
+        else
+            break;
         end
     end
 end

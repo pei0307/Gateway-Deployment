@@ -1,4 +1,4 @@
-function GW_Pathloss_perPixel = Calculate_Pathloss (originalFloorPlan,floorPlanGray,wallAt,pathLossModel,Tx_ind,Rxc,Rxr,pathUnit,TxP_Thres)
+function [GW_Pathloss_perPixel , isWall_perPixel] = Calculate_Pathloss (originalFloorPlan,floorPlanGray,wallAt,pathLossModel,Tx_ind,Rxc,Rxr,pathUnit,TxP_Thres)
 
 TxPower                 = -63.8;        % dBm or dB
 antennaLoss             = 0;        % dB
@@ -6,6 +6,7 @@ TxAntennaGain           = 0 + antennaLoss ; % Gain of Transmitting antenna
 RxAntennaGain           = TxAntennaGain;    % Gain of Receiving antenna
 
 GW_Pathloss_perPixel = zeros(length(Rxr),length(Rxr));
+isWall_perPixel = zeros(size(Rxr,1),size(Rxr,1));
 Tx_ind = find(Tx_ind == 1);
 for d=1:1:length(Tx_ind)
     fprintf('d = %d\n',d);
@@ -51,11 +52,12 @@ for d=1:1:length(Tx_ind)
             wallLoss = 0;
             for k = 2:numel(wallsType{i})
                 wallLoss =  wallAt(wallsType{i}(k)) + wallLoss;
+                isWall_perPixel(d,i) = 1;
             end
             % Calculating the signal strength
             %         lossdB(i) = ((20 * log10(4*pi.*nodeDistance(i).*freq./lightVel) .* (nodeDistance(i) > d0Cost231)) + ((nodeDistance(i) < d0Cost231) .* 20 * log10(4*pi.*d0Cost231.*freq./lightVel)) ) ...
             if nodeDistance(i) ~=0
-                Temp_loss(i) = (nodeDistance(i) ~=0)*10*0.72*log10(nodeDistance(i))+ abs(wallLoss);
+                Temp_loss(i) =10*0.72*log10(nodeDistance(i))+ abs(wallLoss);
             else
                 Temp_loss(i) = -3;
             end
@@ -67,6 +69,7 @@ for d=1:1:length(Tx_ind)
     GW_Pathloss_perPixel(Tx_ind(d),:) = Temp_loss;    
 end
 GW_Pathloss_perPixel = GW_Pathloss_perPixel+(GW_Pathloss_perPixel');
+isWall_perPixel = isWall_perPixel + (isWall_perPixel');
 for i=1:1:size(Rxc,1)
     GW_Pathloss_perPixel(i,i) = -60.8;
 end

@@ -1,4 +1,4 @@
-function [ lossdB,Tx_ind,User_Covered,User_Served,User_Arc,GW_Num ] = Merge_Algorithm(folder,merge_method,Utility_Option,Result_filename,Range)
+function [ lossdB,Tx_ind,User_Covered,User_Served,User_Arc,GW_Num ] = Merge_Algorithm(folder,merge_method,Result_filename,Range)
 
 %%
 %2018/5/11
@@ -12,11 +12,6 @@ noise = -94; %dbm
 Thermal_noise = 10*log10(1.38*10^(-23)*Temperature*Bandwidth*1000);
 TxP_Thres = SNR_Thres + noise;
 Channel = 37;
-Collision_Prob = @(n) 1-(1-1/Channel)^n;
-
-PdBm_to_Pw = @(PdBm) 10^(PdBm/10);
-Pw_to_PdBm = @(Pw) 10*log10(Pw);
-Utility_func = @(P_r,P_int) log2(1+P_r/P_int);
 
 Pixel_Setting = [folder,'pixel_Setting.mat'];
 Pathloss_Distance = [folder,'PlandDis_perpixel.mat'];
@@ -25,10 +20,6 @@ load (Pixel_Setting) ;
 load (Pathloss_Distance) ;
 load (Result_filename);
 
-U=[];
-Txc = Rxc;
-Txr = Rxr;
-Tx_Record = Tx_ind;
 GW_Num = length(find(Tx_ind==1));
 
 %% Calculate Covering range
@@ -86,8 +77,7 @@ for t = 1:1:GW_Num
     end
     All_Link = unique(All_Link(:,1:2),'rows');
     Have_global_best = 0;
-    Upper_U2 = -10000;
-    Upper_U3 = -10000;
+    Upper_U = -10000;
     % consider all the link, choose the highest utility one to merge
     for k = 1:1:size(All_Link,1)
         fprintf('t = %d k = %d\n',t,k);
@@ -107,26 +97,10 @@ for t = 1:1:GW_Num
                 Cadidate_Num = Cadidate_Num+1;
             end
         end
-        Utility_perPixel = zeros(1,size(Rxc,1));
-        Pinterf_perPixel = zeros(1,size(Rxc,1));
-        Tx_Collision_Num = zeros(1,size(Rxc,1));
-        Tx_Utility = zeros(1,size(Rxc,1));
-        for j=1:1:size(Rxc,1)
-            for l = 1:length(Txind_to_Rxind)
-                if GW_Pathloss_perPixel(j,Txind_to_Rxind(l)) > -85 && j ~= Txind_to_Rxind(l)
-                    Tx_Collision_Num = Tx_Collision_Num + 1;
-                    Pinterf_perPixel(j) = Pinterf_perPixel(j) + 10^(GW_Pathloss_perPixel(j,Txind_to_Rxind(l))/10);
-                end
-            end
-            %                 Tx_Utility(j) = Tx_Record(j)* log2(1+(10^(mean(User_Served(find(User_Served(:,1)==j),2))/10))/Tx_Pinterf(j));
-            Utility_perPixel(j) = Utility_func(PdBm_to_Pw(User_Served(j,2)),Pinterf_perPixel(j));
-            Tx_Utility(User_Served(j,1)) = Tx_Utility(User_Served(j,1)) + Utility_perPixel(j);
-        end
         Candidate_Pos = find(Cadidate_ind == 1);
         
         [try_lossdB,try_User_Served,try_User_Covered,try_User_Arc] = Deploy_Result(GW_Pathloss_perPixel,CoverRange_perPixel,Temp_Tx_ind,Rxr,Rxc,TxP_Thres,GW_Serve_Limit,Density_map);
-        U2 = -10000;
-        U3 = -10000;
+        U = -10000;
         Have_local_best = 0;
         for j =1:1:Cadidate_Num
             Temp2_Tx_ind = Temp_Tx_ind;
@@ -137,31 +111,11 @@ for t = 1:1:GW_Num
             for i =1:1:size(Rxr,1)
                 try_Tx_Record(i) = size(find(try2_User_Served==i),1);
             end
-            
-            collision_num =0;
-            Temp_Txind_to_Rxind = find(Temp_Tx_ind == 1);
-            P_interf = 0;
-            for i = 1:length(Temp_Txind_to_Rxind)
-                if GW_Pathloss_perPixel(Candidate_Pos(j),Temp_Txind_to_Rxind(i)) > -85 && Candidate_Pos(j) ~= Temp_Txind_to_Rxind(i)
-                    collision_num = collision_num+1;
-                    P_interf = P_interf + 10^(GW_Pathloss_perPixel(Candidate_Pos(j),Temp_Txind_to_Rxind(i))/10);
-                end
-            end
-            Utility_2 = 0;
-            Served_ID = find(try2_User_Served(:,1)==Candidate_Pos(j));
-            for i=1:try_Tx_Record(Candidate_Pos(j))
-                Utility_2 = Utility_2 + Utility_func(PdBm_to_Pw(try2_User_Served(Served_ID(i),2)),P_interf);
-            end
-            if Utility_Option == 1
-                Utility_3 = try_Tx_Record(Candidate_Pos(j));
-            elseif Utility_Option == 2
-                Utility_3 = mean([Tx_Utility(Txind_to_Rxind(All_Link(k,1))),Tx_Utility(Txind_to_Rxind(All_Link(k,2)))])- Utility_2;
-            elseif Utility_Option == 3
-                Utility_3 = mean([Tx_Utility(Txind_to_Rxind(All_Link(k,1)))/Tx_Record(Txind_to_Rxind(All_Link(k,1))),Tx_Utility(Txind_to_Rxind(All_Link(k,2)))/Tx_Record(Txind_to_Rxind(All_Link(k,1)))])- Utility_2/try_Tx_Record(Candidate_Pos(j));
-            end
-            if (Fitness == 1) && (Utility_3 > U3)
-                U3 = Utility_3;
-                U2 = Utility_2;
+
+            Utility = try_Tx_Record(Candidate_Pos(j));
+
+            if (Fitness == 1) && (Utility > U)
+                U = Utility;
                 Local_Tx_ind = Temp_Tx_ind;
                 Local_Tx_ind(Candidate_Pos(j)) = 1;
                 Local_lossdB = try2_lossdB;
@@ -172,9 +126,8 @@ for t = 1:1:GW_Num
                 Have_local_best = 1;
             end
         end
-        if Have_local_best && (U3 > Upper_U3)
-            Upper_U3 = U3;
-            Upper_U2 = U2;
+        if Have_local_best && (U > Upper_U)
+            Upper_U = U;
             Best_Tx_ind = Local_Tx_ind;
             Best_lossdB = Local_lossdB;
             Best_User_Served = Local_User_Served;
@@ -193,7 +146,6 @@ for t = 1:1:GW_Num
         Tx_Record = Best_Tx_Record;
         GW_Num = length(find(Tx_ind == 1));
         fprintf('GW Num = %d\n',GW_Num);
-        U = [U,sum(Tx_Utility)]
     else
         break;
     end
