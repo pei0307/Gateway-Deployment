@@ -34,13 +34,14 @@ PdBm_to_Pw = @(PdBm) 10^(PdBm/10);
 Pw_to_PdBm = @(Pw) 10*log10(Pw);
 
 
-folder = 'data/SKroom/';
-floor_plan = [folder,'floorplan.jpg'];
-density_plan = [folder,'density.jpg'];
+folder = 'data/SK_wirelessinsite/';
+floor_plan = [folder,'floorplan3.jpg'];
+density_plan = [folder,'density2.jpg'];
+avaliable_plan = [folder,'avaliable.jpg'];
 
-wall_detect = [folder,'wall_detect.mat'];
+wall_detect = [folder,'wall_detect3.mat'];
 Pixel_Setting = [folder,'pixel_Setting.mat'];
-Pathloss_Distance = [folder,'PlandDis_perpixel.mat'];
+Pathloss_Distance = [folder,'PlandDis_perpixel3.mat'];
 
 % load floor plan
 floorPlan = imread(floor_plan);
@@ -51,6 +52,12 @@ if exist(density_plan, 'file')
     ImDensityBW = ~im2bw(ImDensity);
 else
     ImDensityBW = ~floorPlanBW;
+end
+if exist(avaliable_plan, 'file')
+    ImAvaliable = imread(avaliable_plan);
+    ImAvaliableBW = ~im2bw(ImAvaliable);
+else
+    ImAvaliableBW = ~floorPlanBW;
 end
 
 % wall detection
@@ -96,14 +103,14 @@ else
     % Meshing the Floor Plan
     floorMesh = zeros(size(floorPlanBW));
     for i=1:1: meshNode.horz.num
-        if i*Unit  < size(floorPlanBW,2)
+        if i*Unit-Unit/2 < size(floorPlanBW,2)
             horz =round(i*Unit - Unit/2);
         else
             %             horz = size(floorPlanBW,2)-1;
         end
         for j=1:1:meshNode.vert.num
             
-            if j*Unit  < size(floorPlanBW,1)
+            if j*Unit-Unit/2  < size(floorPlanBW,1)
                 vert = round(j*Unit - Unit/2);
             else
                 %             vert = size(floorPlanBW,1)-1;
@@ -134,8 +141,8 @@ else
             end
         end
     end
-    Rxr = Rxr(find(Rxr~=-1));
-    Rxc = Rxc(find(Rxc~=-1));
+%     Rxr = Rxr(find(Rxr~=-1));
+%     Rxc = Rxc(find(Rxc~=-1));
     save(Pixel_Setting,'pathUnit','meshNode','Rxc','Rxr');
 end
 
@@ -155,11 +162,13 @@ else
     save(Pathloss_Distance,'GW_Pathloss_perPixel','Distance_perPixel','isWall_perPixel');
 end
 Density_map = zeros(1,size(Rxc,1));
+Avaliable_map = zeros(1,size(Rxc,1));
 for i=1:1:size(Rxc,1)
     Density_map(i)=Density;
      if ImDensityBW(Rxr(i),Rxc(i)) ==1
          Density_map(i) =0 ;
      end
+     Avaliable_map(i) = ~ImAvaliableBW(Rxr(i),Rxc(i));
     %     if ImDensity2(Rxr(i),Rxc(i)) ==1
 %         Density_map(i) =0.07 ;
 %     else
@@ -176,11 +185,13 @@ if TriangleDemo ==1
 end
 
 %% Initialization
-imshow(~imdilate(floorPlanGray,strel('disk',2)));
-text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'Color','red','FontSize',10);
-initial_Tx = [73,451,805,904,1,24,1213,1250,1259];
-% initial_Tx = [85,592,1,20,81,86,1113,1260,1705,1749,1760];
+imshow(~floorPlanGray);
+text(Rxc,Rxr,num2str([1:1:size(Rxc,1)]'),'Color','red','FontSize',5);
+% initial_Tx = [73,451,805,904,1,24,1213,1250,1259];
+% initial_Tx = [512,671,827,908,451,1,24,1250,73,72,192,329,79,80,335,86,336,88,342,503,813,505,819,454,805,812,511,820,500,913,975,1049,1032,1077,1094,1134,1104,1161,1178,1206,1213,1168,240,360,402,531,681,570,720,804,837,903,968,923,985,1025,1059,1087,1223,1259];
+initial_Tx = [1,76,8,77,9,12,84,121,132];
 % initial_Tx = [1,meshNode.vert.num,meshNode.vert.num*((meshNode.horz.num)-1)+1,meshNode.vert.num*(meshNode.horz.num)];
+
 Tx_ind = zeros(1,size(Rxc,1));
 Queue_ind = zeros(1,size(Rxc,1));
 Tx_ind(initial_Tx) =1;
@@ -190,8 +201,7 @@ Queue_ind(initial_Tx) = [1:1:GW_Num];
 Finish_P = zeros(1,size(Rxc,1));
 Range = 10;
 Utility_Tres = 1;
-text(Rxc(initial_Tx),Rxr(initial_Tx),'*','Color','blue','FontSize',10);
-
+text(Rxc(initial_Tx),Rxr(initial_Tx),'*','Color','blue','FontSize',30);
 %% Calculate Covering range
 CoverRange_perPixel = zeros(size(Rxc,1),size(Rxc,1));
 for i=1:1:size(Rxc,1)
@@ -234,8 +244,10 @@ while (1)
 
     CurP_Served = (CurP_Served1 | CurP_Served2);
     CurP_Covered = find(CoverRange_perPixel(Cur_P,:)==1);
-    
+%     tic
     [lossdB,User_Served,User_Covered,User_Arc] = Deploy_Result(GW_Pathloss_perPixel,CoverRange_perPixel,Tx_ind,Rxr,Rxc,TxP_Thres,GW_Serve_Limit,Density_map);
+    Tri_Utility = Constraint_Fulfilled([1:1:size(Rxc,1)],User_Served,User_Arc);
+%     toc
     %% Construct the triangle and Update the Finish Set
     Link = intersect(find(Tx_ind==1),CurP_Covered);
     for k=1:1:length(Link)
@@ -290,6 +302,7 @@ while (1)
                 % Construct the triangle and find the highest fitness one
                 for k=1:1:length(Link)
                     Candidate_P = Find_Cadidate_P_in2GW(Cur_P,Link(k),GW_Pathloss_perPixel,CoverRange_perPixel,GW_Serve_Limit,TxP_Thres,User_Served);
+                    Candidate_P = intersect(Candidate_P,find(Avaliable_map==1));
                     Temp_Fitness = 0;
                     for j=1:1:length(Candidate_P)
                         P1 = [Rxc(Cur_P),Rxr(Cur_P)];
@@ -370,6 +383,7 @@ while (1)
         end
         if (length(Link) == 0 || Best_Fitness == 0)
             Candidate_P =  find(CoverRange_perPixel(Cur_P,:)==1);
+            Candidate_P = intersect(Candidate_P,find(Avaliable_map==1));
             Best_Fitness = 0;
             for j=1:1:length(Candidate_P)
                 if Finish_P(Candidate_P(j)) ~= 1 && Tx_ind(Candidate_P(j))~=1
@@ -414,7 +428,7 @@ GW_Num = q_num;
 subfolder = datestr(now,30);
 mkdir([folder,subfolder]);
 filename = [folder,subfolder,'/DeployResult.mat'];
-save(filename,'floorPlan','Pixel_Setting','Pathloss_Distance','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
+save(filename,'floor_plan','density_plan','avaliable_plan','wall_detect','Pixel_Setting','Pathloss_Distance','initial_Tx','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Avaliable_map','Density_map','Range','GW_Num');
 %% Applying color map
 % originalFloorPlan = ~imdilate(~floorPlanBW,strel('disk',2));
 % smallFSPLImage = (reshape(lossdB,meshNode.vert.num, meshNode.horz.num));
@@ -452,11 +466,10 @@ for i=1:1:size(Rxr,1)
     end
 end
 title(['FeasibleDensity, Range=',num2str(Range),' GW=',num2str(GW_Num)]);
-
+saveas(gcf,[folder,subfolder,'/DeployResult.png']);
  [ lossdB,Tx_ind,User_Covered,User_Served,User_Arc,GW_Num ] = Merge_Algorithm(folder,0,filename,Range);
 Merge_filename =[folder,subfolder,'/DeployResult_Merge.mat'];
-save(Merge_filename,'Pixel_Setting','Pathloss_Distance','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Density_map','Range','GW_Num');
-
+save(Merge_filename,'floor_plan','density_plan','avaliable_plan','wall_detect','Pixel_Setting','Pathloss_Distance','initial_Tx','TxP_Thres','lossdB','Tx_ind','User_Covered','User_Served','User_Arc','GW_Serve_Limit','Avaliable_map','Density_map','Range','GW_Num');
 figure;
 imshow(floor_plan);
 % text(Rxc,Rxr,num2str(User_Served(:,1)),'FontSize',10);

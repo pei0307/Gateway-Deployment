@@ -1,15 +1,13 @@
 clear;
 folder = 'data/SKfloorplan_modify/';
 sub_folder = '20181228T204204/';
-filename = [folder,sub_folder,'DeployResult_Merge.mat'];
+filename = [folder,sub_folder,'DeployResult.mat'];
 load(filename);
 
 floor_plan = [folder,'floorplan.png'];
-
 floorPlan = imread(floor_plan);
 floorPlanBW = ~im2bw(floorPlan);
 originalFloorPlan = floorPlanBW; % At this point, Structure in Original Image and floorPlanBW is in black
-
 load (Pixel_Setting) ;
 load (Pathloss_Distance);
 

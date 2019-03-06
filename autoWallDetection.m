@@ -21,7 +21,6 @@ if isempty(fillGap)
     fillGap = 40;
 end
 
-
 if isempty(wallAt)
     wallAt = zeros(1,255);
 end
